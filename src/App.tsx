@@ -5,7 +5,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { Chat, Contact, StatusStory, CallRecord, UserProfile, Message, AttachmentMediaType } from './types';
-import { initialChats, initialStatusStories, initialCalls, defaultUserProfile } from './data/initialData';
+import { initialChats, initialStatusStories, initialCalls, defaultUserProfile, createSvgAvatar } from './data/initialData';
 import { Sidebar } from './components/Sidebar';
 import { ChatWindow } from './components/ChatWindow';
 import { RightPanel, RightPanelTab } from './components/RightPanel';
@@ -16,6 +16,7 @@ import { SettingsModal } from './components/SettingsModal';
 import { AndroidInstallModal } from './components/AndroidInstallModal';
 import { playSendSound, playReceiveSound } from './utils/sound';
 import { saveAttachmentFile } from './utils/fileStorage';
+import { isPhoneMatch } from './utils/phoneUtils';
 
 const STORAGE_KEYS = {
   CHATS: 'whatsup_chats_v1',
@@ -30,7 +31,32 @@ export default function App() {
   const [chats, setChats] = useState<Chat[]>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEYS.CHATS);
-      return saved ? JSON.parse(saved) : initialChats;
+      if (saved) {
+        const parsed: Chat[] = JSON.parse(saved);
+        const initialMap = new Map(initialChats.map((c) => [c.id, c]));
+        const updated = parsed.map((c) => {
+          const init = initialMap.get(c.id);
+          const contact = { ...c.contact };
+          if (init) {
+            if (!contact.phone || contact.phone.startsWith('Group')) {
+              contact.phone = init.contact.phone;
+            }
+            if (init.contact.groupMemberDetails && !contact.groupMemberDetails) {
+              contact.groupMemberDetails = init.contact.groupMemberDetails;
+            }
+          }
+          return { ...c, contact };
+        });
+
+        // Merge any newly introduced contacts from initialChats (e.g., Priya Sharma, Lucas Silva)
+        initialChats.forEach((initChat) => {
+          if (!updated.some((c) => c.id === initChat.id)) {
+            updated.push(initChat);
+          }
+        });
+        return updated;
+      }
+      return initialChats;
     } catch {
       return initialChats;
     }
@@ -57,7 +83,18 @@ export default function App() {
   const [calls, setCalls] = useState<CallRecord[]>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEYS.CALLS);
-      return saved ? JSON.parse(saved) : initialCalls;
+      if (saved) {
+        const parsed: CallRecord[] = JSON.parse(saved);
+        const initialCallsMap = new Map(initialCalls.map((c) => [c.id, c]));
+        return parsed.map((c) => {
+          const init = initialCallsMap.get(c.id);
+          return {
+            ...c,
+            contactPhone: c.contactPhone || init?.contactPhone || '+1 (555) 234-5678',
+          };
+        });
+      }
+      return initialCalls;
     } catch {
       return initialCalls;
     }
@@ -409,6 +446,7 @@ export default function App() {
         id: `call-${Date.now()}`,
         contactId: activeCall.contact.id,
         contactName: activeCall.contact.name,
+        contactPhone: activeCall.contact.phone,
         contactAvatar: activeCall.contact.avatar,
         type: activeCall.type,
         direction: 'outgoing',
@@ -465,6 +503,33 @@ export default function App() {
     setChats((prev) => [newChat, ...prev]);
     setActiveChatId(newChat.id);
     setMobileView('chat');
+  };
+
+  // Direct chat with any phone number (e.g., wa.me equivalent)
+  const handleStartChatWithPhone = (phone: string, contactName?: string) => {
+    const trimmedPhone = phone.trim();
+    if (!trimmedPhone) return;
+
+    // Check if chat already exists for this phone number
+    const existing = chats.find((c) => isPhoneMatch(c.contact.phone, trimmedPhone));
+    if (existing) {
+      handleSelectChat(existing.id);
+      return;
+    }
+
+    const nameToUse = contactName?.trim() || trimmedPhone;
+    const initials = nameToUse.slice(0, 2).toUpperCase();
+    const newContact: Contact = {
+      id: `contact-phone-${Date.now()}`,
+      name: nameToUse,
+      phone: trimmedPhone,
+      about: "Hey there! I am using What's up.",
+      avatar: createSvgAvatar(initials, '#00a884'),
+      isOnline: true,
+      unreadCount: 0,
+    };
+
+    handleCreateNewContact(newContact);
   };
 
   // Delete chat history
@@ -624,6 +689,8 @@ export default function App() {
               handleSelectChat(existing.id);
             }
           }}
+          onStartChatWithPhone={handleStartChatWithPhone}
+          onStartCall={handleStartCall}
           onCreateNewContact={handleCreateNewContact}
           onClose={() => setShowNewChatModal(false)}
         />

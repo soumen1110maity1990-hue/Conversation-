@@ -19,10 +19,13 @@ import {
   Upload,
   Play,
   Check,
+  Copy,
+  Users,
 } from 'lucide-react';
 import { Contact, StatusStory, CallRecord, Chat } from '../types';
 import { Avatar } from './Avatar';
 import { LIVE_AVATAR_PRESETS } from '../data/initialData';
+import { cleanPhoneForDialing, copyPhoneToClipboard } from '../utils/phoneUtils';
 
 export type RightPanelTab = 'status' | 'calls' | 'info';
 
@@ -58,6 +61,16 @@ export const RightPanel: React.FC<RightPanelProps> = ({
   const [newStatusText, setNewStatusText] = useState('');
   const [selectedBg, setSelectedBg] = useState('#005c4b');
   const [isMuted, setIsMuted] = useState(false);
+  const [copiedPhone, setCopiedPhone] = useState<string | null>(null);
+
+  const handleCopyPhone = async (phone: string) => {
+    if (!phone) return;
+    const success = await copyPhoneToClipboard(phone);
+    if (success) {
+      setCopiedPhone(phone);
+      setTimeout(() => setCopiedPhone(null), 2000);
+    }
+  };
 
   const bgColors = ['#005c4b', '#7c3aed', '#0284c7', '#b45309', '#db2777', '#334155'];
 
@@ -229,6 +242,33 @@ export const RightPanel: React.FC<RightPanelProps> = ({
                     <img src={call.contactAvatar} alt={call.contactName} className="w-11 h-11 rounded-full object-cover shrink-0" />
                     <div className="min-w-0">
                       <p className="text-sm font-medium text-white truncate">{call.contactName}</p>
+                      {call.contactPhone && (
+                        <div className="flex items-center gap-1.5 my-0.5">
+                          <a
+                            href={`tel:${cleanPhoneForDialing(call.contactPhone)}`}
+                            onClick={(e) => e.stopPropagation()}
+                            className="text-[11px] font-mono text-[#00a884] hover:underline flex items-center gap-1"
+                            title={`Call ${call.contactPhone} directly`}
+                          >
+                            <Phone size={10} />
+                            <span>{call.contactPhone}</span>
+                          </a>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleCopyPhone(call.contactPhone!);
+                            }}
+                            className="text-slate-400 hover:text-white p-0.5 rounded transition-colors"
+                            title="Copy number"
+                          >
+                            {copiedPhone === call.contactPhone ? (
+                              <Check size={11} className="text-[#00a884]" />
+                            ) : (
+                              <Copy size={11} />
+                            )}
+                          </button>
+                        </div>
+                      )}
                       <div className="flex items-center gap-1.5 text-xs text-slate-400">
                         {call.direction === 'incoming' && <ArrowDownLeft size={13} className="text-[#00a884]" />}
                         {call.direction === 'outgoing' && <ArrowUpRight size={13} className="text-[#00a884]" />}
@@ -248,13 +288,22 @@ export const RightPanel: React.FC<RightPanelProps> = ({
 
                   {/* Callback actions */}
                   <div className="flex items-center gap-1 opacity-70 group-hover:opacity-100 transition-opacity">
+                    {call.contactPhone && (
+                      <a
+                        href={`tel:${cleanPhoneForDialing(call.contactPhone)}`}
+                        className="p-2 text-slate-300 hover:text-[#00a884] hover:bg-[#111b21] rounded-full transition-colors"
+                        title="Dial on phone"
+                      >
+                        <PhoneCall size={16} />
+                      </a>
+                    )}
                     <button
                       onClick={() => {
                         const targetContact = {
                           id: call.contactId,
                           name: call.contactName,
                           avatar: call.contactAvatar,
-                          phone: '',
+                          phone: call.contactPhone || '',
                           about: '',
                           isOnline: true,
                           unreadCount: 0,
@@ -285,7 +334,28 @@ export const RightPanel: React.FC<RightPanelProps> = ({
                 className="border-4 border-[#111b21] shadow-xl mb-3"
               />
               <h3 className="text-lg font-bold text-white">{contact.name}</h3>
-              <p className="text-xs text-slate-400 font-mono mt-0.5">{contact.phone}</p>
+              <div className="flex items-center justify-center gap-1.5 mt-1">
+                <a
+                  href={`tel:${cleanPhoneForDialing(contact.phone)}`}
+                  className="text-xs font-mono text-[#00a884] hover:underline flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#111b21] border border-[#2a3942] hover:border-[#00a884] transition-colors"
+                  title="Tap to dial phone number directly"
+                >
+                  <Phone size={11} />
+                  <span>{contact.phone}</span>
+                </a>
+                <button
+                  type="button"
+                  onClick={() => handleCopyPhone(contact.phone)}
+                  className="p-1.5 rounded-full bg-[#111b21] hover:bg-[#182229] border border-[#2a3942] text-slate-400 hover:text-white transition-colors"
+                  title="Copy phone number"
+                >
+                  {copiedPhone === contact.phone ? (
+                    <Check size={12} className="text-[#00a884]" />
+                  ) : (
+                    <Copy size={12} />
+                  )}
+                </button>
+              </div>
               
               <div className="flex items-center gap-2 mt-2 flex-wrap justify-center">
                 <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#111b21] text-xs text-[#00a884]">
@@ -440,11 +510,130 @@ export const RightPanel: React.FC<RightPanelProps> = ({
               )}
             </div>
 
-            {/* About & Phone */}
+            {/* Phone Number & Direct Cellular Link */}
+            <div className="p-4 bg-[#202c33] rounded-2xl space-y-2.5 border border-[#2a3942]">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                  Phone Number
+                </span>
+                <span className="text-[10px] text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20 font-medium">
+                  Direct Line
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between p-3 rounded-xl bg-[#111b21] border border-[#2a3942]">
+                <div className="min-w-0 flex-1">
+                  <a
+                    href={`tel:${cleanPhoneForDialing(contact.phone)}`}
+                    className="text-base font-semibold font-mono text-white hover:text-[#00a884] transition-colors block truncate"
+                    title="Click to dial this phone number directly"
+                  >
+                    {contact.phone}
+                  </a>
+                  <p className="text-[11px] text-slate-400 mt-0.5">Mobile · Tap to open phone dialer</p>
+                </div>
+
+                <div className="flex items-center gap-1.5 ml-2">
+                  <button
+                    type="button"
+                    onClick={() => handleCopyPhone(contact.phone)}
+                    className="p-2 text-slate-300 hover:text-white hover:bg-[#202c33] rounded-lg transition-colors"
+                    title="Copy phone number"
+                  >
+                    {copiedPhone === contact.phone ? (
+                      <span className="flex items-center gap-1 text-xs text-[#00a884] font-medium">
+                        <Check size={14} /> Copied
+                      </span>
+                    ) : (
+                      <Copy size={16} />
+                    )}
+                  </button>
+                  <a
+                    href={`tel:${cleanPhoneForDialing(contact.phone)}`}
+                    className="p-2 text-[#00a884] hover:bg-[#202c33] rounded-lg transition-colors"
+                    title="Dial with phone app"
+                  >
+                    <PhoneCall size={16} />
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            {/* About / Bio */}
             <div className="p-4 bg-[#202c33] rounded-2xl space-y-2">
               <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">About</p>
               <p className="text-sm text-white">{contact.about || 'Available'}</p>
             </div>
+
+            {/* Group Members with Individual Phone Numbers */}
+            {contact.isGroup && (
+              <div className="p-4 bg-[#202c33] rounded-2xl space-y-3 border border-[#2a3942]">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Users size={16} className="text-[#00a884]" />
+                    <span className="text-xs font-semibold text-slate-300 uppercase tracking-wider">
+                      Group Members ({contact.groupMemberDetails?.length || contact.groupMembers?.length || 0})
+                    </span>
+                  </div>
+                  <span className="text-[10px] text-slate-400">All numbers linked</span>
+                </div>
+
+                <div className="space-y-2 pt-1">
+                  {(contact.groupMemberDetails || contact.groupMembers?.map((m) => ({ name: m, phone: '+1 (555) 234-8901', avatar: '', about: 'Member' })) || []).map((member, idx) => (
+                    <div
+                      key={idx}
+                      className="flex items-center justify-between p-2.5 rounded-xl bg-[#111b21] hover:bg-[#182229] border border-[#2a3942]/60 transition-colors"
+                    >
+                      <div className="min-w-0 flex-1 pr-2">
+                        <p className="text-xs font-semibold text-white truncate">{member.name}</p>
+                        <a
+                          href={`tel:${cleanPhoneForDialing(member.phone)}`}
+                          className="text-[11px] font-mono text-[#00a884] hover:underline flex items-center gap-1 mt-0.5"
+                          title={`Dial ${member.phone}`}
+                        >
+                          <Phone size={10} />
+                          <span>{member.phone}</span>
+                        </a>
+                      </div>
+
+                      <div className="flex items-center gap-1">
+                        <button
+                          type="button"
+                          onClick={() => handleCopyPhone(member.phone)}
+                          className="p-1.5 text-slate-400 hover:text-white hover:bg-[#202c33] rounded-lg transition-colors"
+                          title="Copy member phone number"
+                        >
+                          {copiedPhone === member.phone ? (
+                            <Check size={12} className="text-[#00a884]" />
+                          ) : (
+                            <Copy size={12} />
+                          )}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const memberContact: Contact = {
+                              id: `member-${idx}`,
+                              name: member.name,
+                              avatar: member.avatar || '',
+                              about: member.about || 'Member',
+                              phone: member.phone,
+                              isOnline: true,
+                              unreadCount: 0,
+                            };
+                            onStartCall(memberContact, 'audio');
+                          }}
+                          className="p-1.5 text-[#00a884] hover:bg-[#202c33] rounded-lg transition-colors"
+                          title="Call member"
+                        >
+                          <Phone size={13} />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Shared Media */}
             <div className="p-4 bg-[#202c33] rounded-2xl space-y-3">

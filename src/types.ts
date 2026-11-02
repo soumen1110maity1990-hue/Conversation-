@@ -52,6 +52,7 @@ export interface Contact {
   isFavorite?: boolean;
   isGroup?: boolean;
   groupMembers?: string[];
+  groupMemberDetails?: { name: string; phone: string; avatar?: string; about?: string }[];
 }
 
 export interface Chat {
@@ -87,6 +88,7 @@ export interface CallRecord {
   contactId: string;
   contactName: string;
   contactAvatar: string;
+  contactPhone?: string;
   type: 'audio' | 'video';
   direction: 'incoming' | 'outgoing' | 'missed';
   timestamp: string;

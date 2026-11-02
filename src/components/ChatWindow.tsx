@@ -36,6 +36,7 @@ import { APP_ICON_PATH } from './HeaderLogo';
 import { AttachmentMessageBubble } from './AttachmentMessageBubble';
 import { AttachmentPreviewModal } from './AttachmentPreviewModal';
 import { detectFileType, formatFileSize } from '../utils/fileStorage';
+import { cleanPhoneForDialing } from '../utils/phoneUtils';
 
 interface ChatWindowProps {
   chat: Chat | null;
@@ -303,15 +304,29 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
               <h3 className="text-sm font-semibold text-[#e9edef] truncate group-hover:text-white transition-colors">
                 {contact.name}
               </h3>
-              <p className="text-xs text-[#8696a0] truncate">
-                {contact.isTyping ? (
-                  <span className="text-[#00a884] font-medium animate-pulse">typing...</span>
-                ) : contact.isOnline ? (
-                  <span className="text-[#00a884]">online</span>
-                ) : (
-                  contact.lastSeen || 'offline'
+              <div className="flex items-center gap-2">
+                <p className="text-xs text-[#8696a0] truncate">
+                  {contact.isTyping ? (
+                    <span className="text-[#00a884] font-medium animate-pulse">typing...</span>
+                  ) : contact.isOnline ? (
+                    <span className="text-[#00a884]">online</span>
+                  ) : (
+                    contact.lastSeen || 'offline'
+                  )}
+                </p>
+                {/* Individual Phone Link Badge */}
+                {contact.phone && (
+                  <a
+                    href={`tel:${cleanPhoneForDialing(contact.phone)}`}
+                    onClick={(e) => e.stopPropagation()}
+                    className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-mono bg-[#111b21] hover:bg-[#182229] text-[#8696a0] hover:text-[#00a884] transition-colors border border-[#2a3942]"
+                    title={`Call ${contact.phone} directly`}
+                  >
+                    <Phone size={10} className="text-[#00a884]" />
+                    <span>{contact.phone}</span>
+                  </a>
                 )}
-              </p>
+              </div>
             </div>
           </div>
         </div>

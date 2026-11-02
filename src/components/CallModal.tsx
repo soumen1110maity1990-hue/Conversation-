@@ -3,6 +3,7 @@ import { Mic, MicOff, Video, VideoOff, PhoneOff, Volume2, VolumeX } from 'lucide
 import { Contact } from '../types';
 import { playRingtoneNote } from '../utils/sound';
 import { Avatar } from './Avatar';
+import { cleanPhoneForDialing } from '../utils/phoneUtils';
 
 interface CallModalProps {
   contact: Contact | null;
@@ -108,6 +109,17 @@ export const CallModal: React.FC<CallModalProps> = ({
             WhatsApp {type === 'video' ? 'Video Call' : 'Audio Call'}
           </p>
           <h3 className="text-2xl font-bold text-white tracking-tight">{contact.name}</h3>
+          {contact.phone && (
+            <div className="mt-1">
+              <a
+                href={`tel:${cleanPhoneForDialing(contact.phone)}`}
+                className="inline-flex items-center gap-1.5 text-xs font-mono text-emerald-400 hover:underline px-3 py-0.5 rounded-full bg-black/40 border border-emerald-500/30"
+                title="Dial direct cellular number"
+              >
+                <span>{contact.phone}</span>
+              </a>
+            </div>
+          )}
 
           <div className="mt-2 flex items-center justify-center gap-2">
             {callStatus === 'calling' && (

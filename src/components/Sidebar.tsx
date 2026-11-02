@@ -17,6 +17,7 @@ import { Chat } from '../types';
 import { HeaderLogo } from './HeaderLogo';
 import { Avatar } from './Avatar';
 import { InstallAppButton } from './InstallAppButton';
+import { isPhoneMatch, cleanPhoneForDialing } from '../utils/phoneUtils';
 
 type FilterType = 'all' | 'unread' | 'favorites' | 'groups';
 
@@ -50,7 +51,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     const contact = chat.contact;
     const matchesSearch =
       contact.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      contact.phone.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      isPhoneMatch(contact.phone, searchQuery) ||
       chat.messages.some((m) => m.text?.toLowerCase().includes(searchQuery.toLowerCase()));
 
     if (!matchesSearch) return false;
@@ -257,7 +258,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
                 {/* Chat Details */}
                 <div className="flex-1 min-w-0 pr-1">
-                  <div className="flex items-center justify-between mb-1">
+                  <div className="flex items-center justify-between mb-0.5">
                     <span className="text-sm font-semibold text-[#e9edef] truncate">
                       {contact.name}
                     </span>
@@ -269,6 +270,21 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       {lastMsg ? lastMsg.timeFormatted : ''}
                     </span>
                   </div>
+
+                  {/* Individual Contact Phone Link */}
+                  {contact.phone && (
+                    <div className="flex items-center gap-1 mb-0.5">
+                      <a
+                        href={`tel:${cleanPhoneForDialing(contact.phone)}`}
+                        onClick={(e) => e.stopPropagation()}
+                        className="text-[11px] font-mono text-[#8696a0] group-hover:text-[#00a884] hover:underline flex items-center gap-1 truncate"
+                        title={`Dial ${contact.phone}`}
+                      >
+                        <Phone size={10} className="text-[#00a884]/70 shrink-0" />
+                        <span className="truncate">{contact.phone}</span>
+                      </a>
+                    </div>
+                  )}
 
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-1 min-w-0 pr-2">
