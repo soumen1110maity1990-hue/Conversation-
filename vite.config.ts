@@ -6,6 +6,7 @@ import {defineConfig} from 'vite';
 
 export default defineConfig(() => {
   return {
+    base: './',
     plugins: [
       react(),
       tailwindcss(),
@@ -17,7 +18,7 @@ export default defineConfig(() => {
           'assets/aistudio/WhatsApp_Image_2026-11-02_at_11.08.09_AM__1__d83e939e.jpeg',
         ],
         manifest: {
-          id: '/',
+          id: './',
           name: "What's up",
           short_name: "What's up",
           description: "Interactive WhatsApp Web clone with real-time chats, voice messages, unlimited file sharing, and live animated profile media.",
@@ -25,24 +26,24 @@ export default defineConfig(() => {
           background_color: '#111b21',
           display: 'standalone',
           orientation: 'portrait-primary',
-          start_url: '/',
-          scope: '/',
+          start_url: './',
+          scope: './',
           categories: ['social', 'productivity'],
           icons: [
             {
-              src: '/icon-192.jpeg',
+              src: 'icon-192.jpeg',
               sizes: '192x192',
               type: 'image/jpeg',
               purpose: 'any',
             },
             {
-              src: '/icon-512.jpeg',
+              src: 'icon-512.jpeg',
               sizes: '512x512',
               type: 'image/jpeg',
               purpose: 'any',
             },
             {
-              src: '/assets/aistudio/WhatsApp_Image_2026-11-02_at_11.08.09_AM__1__d83e939e.jpeg',
+              src: 'assets/aistudio/WhatsApp_Image_2026-11-02_at_11.08.09_AM__1__d83e939e.jpeg',
               sizes: '1600x1600',
               type: 'image/jpeg',
               purpose: 'any',
