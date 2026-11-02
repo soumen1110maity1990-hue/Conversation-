@@ -1,0 +1,6 @@
+{
+  "name": "What's up",
+  "description": "Interactive WhatsApp Web clone featuring a 3-panel layout, dynamic chat switching, status stories, audio/video call simulation, and localStorage persistence.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

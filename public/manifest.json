@@ -1,0 +1,33 @@
+{
+  "id": "/",
+  "name": "What's up",
+  "short_name": "What's up",
+  "description": "Interactive WhatsApp Web clone with real-time chats, voice messages, unlimited file sharing, and live animated profile media.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "theme_color": "#111b21",
+  "background_color": "#111b21",
+  "categories": ["social", "productivity", "communication"],
+  "icons": [
+    {
+      "src": "/icon-192.jpeg",
+      "sizes": "192x192",
+      "type": "image/jpeg",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.jpeg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "any"
+    },
+    {
+      "src": "/assets/aistudio/WhatsApp_Image_2026-11-02_at_11.08.09_AM__1__d83e939e.jpeg",
+      "sizes": "1600x1600",
+      "type": "image/jpeg",
+      "purpose": "any"
+    }
+  ]
+}
